@@ -1,0 +1,51 @@
+# One pipeline for the whole site.
+#   Pull request: type-check, build, test, dry-run the deploy, upload a preview version.
+#   Push to main (a merged PR): the same checks, then deploy to production.
+# The job name "verify" is the required status check on main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Superseded PR runs are cancelled; production deploys queue, never cancel mid-deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: npx wrangler deploy --dry-run
+
+      # Preview for review. Skipped where secrets are unavailable (forks, Dependabot).
+      # Informational only: it never blocks a merge.
+      - name: Upload preview version
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.actor != 'dependabot[bot]'
+        continue-on-error: true
+        run: |
+          npx wrangler versions upload --preview-alias "pr-${{ github.event.number }}" | tee upload.log
+          { echo '### Preview'; grep -o 'https://[^ ]*workers\.dev[^ ]*' upload.log | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy to production
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npx wrangler deploy
