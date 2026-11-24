@@ -1,4 +1,5 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
 
 /**
@@ -13,7 +14,7 @@ const products = defineCollection({
     /** One sentence, shown on the home page and product list. */
     summary: z.string(),
     /** Product's own website, if it has one. */
-    website: z.string().url().optional(),
+    website: z.url().optional(),
     /** Where the product runs. Order here is the order shown. */
     platforms: z.array(z.enum(['web', 'ios', 'android'])).default([]),
     /** Square icon under /public. */
@@ -23,7 +24,7 @@ const products = defineCollection({
       .default([]),
     /** Store links, filled in at launch. */
     stores: z
-      .array(z.object({ label: z.string(), href: z.string().url() }))
+      .array(z.object({ label: z.string(), href: z.url() }))
       .default([]),
     /** Lower numbers appear first. */
     order: z.number().default(100),

@@ -12,17 +12,23 @@
     "typecheck": "astro check",
     "test": "node --test",
     "verify": "astro check && astro build && node --test",
+    "security": "npm audit --audit-level=high && npm audit signatures && node scripts/support-check.mjs",
     "preview": "astro build && wrangler dev",
     "deploy:check": "astro build && wrangler deploy --dry-run",
     "astro": "astro"
   },
   "dependencies": {
     "@fontsource-variable/bricolage-grotesque": "^5.0.0",
-    "astro": "^5.15.0"
+    "astro": "^7.4.13"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "wrangler": "^4.0.0"
+  },
+  "allowScripts": {
+    "esbuild": false,
+    "workerd": false,
+    "fsevents": false
   }
 }
