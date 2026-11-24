@@ -1,7 +1,8 @@
 # advaegis.com
 
 The company website for ADVAEGIS LTD: a static [Astro](https://astro.build) site, hosted free on
-Cloudflare Workers Static Assets and deployed automatically from GitHub.
+Cloudflare Workers Static Assets and deployed by GitHub Actions when a pull request is merged
+to `main`.
 
 ```
 src/
@@ -15,66 +16,55 @@ src/
   pages/                  /, /products/, /products/[slug]/, /consulting/, /contact/, /privacy/, 404, sitemap.xml
   styles/global.css       design tokens and base styles
 public/                   images, favicons, _headers, robots.txt
+tests/site.test.mjs       checks on the built site (Node's built-in test runner)
+.github/                  CI/deploy workflow and Dependabot
+.claude/settings.json     what Claude Code may and may not run in this repo
 wrangler.jsonc            Cloudflare Worker config (static assets only)
 CLAUDE.md                 conventions for Claude Code
 ```
 
 ## 1. Set up on your Mac
 
-You need Node.js 22 or later, git, and Claude Code.
+You need Node.js 26 (the version in `.nvmrc`), git, the GitHub CLI and Claude Code. Install
+and update them with Homebrew: `brew install node gh`.
 
 ```bash
-node -v                  # should print v22 or later. If not: brew install node@22 (or use nvm)
-mkdir -p ~/Projects && cd ~/Projects
-unzip ~/Downloads/advaegis-site.zip      # creates ~/Projects/advaegis-site
-cd advaegis-site
-npm install
-npm run dev              # open http://localhost:4321
+gh repo clone advaegis/advaegis-site ~/Projects/advaegis-site
+cd ~/Projects/advaegis-site
+npm ci
+npm run verify           # typecheck, build and test, as CI does
+npm run dev              # http://localhost:4321
+npm run preview          # serves dist/ with Wrangler as Cloudflare will, at http://localhost:8787
 ```
 
-Then build it once and serve it the way Cloudflare will:
+## 2. Protect `main`
 
-```bash
-npm run build
-npm run preview          # Wrangler serves dist/ at http://localhost:8787
-```
+The repository is public, so GitHub's rulesets are free. In **Settings → Rules → Rulesets →
+New branch ruleset**, target `main` and turn on:
 
-## 2. Put it on GitHub (private)
+- Require a pull request before merging
+- Require status checks to pass: `verify`
+- Block force pushes, and restrict deletions
 
-Using the GitHub CLI (`brew install gh`, then `gh auth login`):
+## 3. Deploys: GitHub Actions to Cloudflare
 
-```bash
-git init -b main
-git add .
-git commit -m "Initial Advaegis website"
-gh repo create advaegis/advaegis-site --private --source=. --push
-```
+`.github/workflows/ci.yml` runs on every pull request: typecheck, build, test, a deploy dry
+run, and a preview version (its URL is in the run's summary). On a merge to `main` it runs
+the same checks and then `wrangler deploy`. Cloudflare Workers Builds is **not** used.
+Leave it disconnected, or every merge deploys twice.
 
-Or create an empty private repo named `advaegis-site` in the `advaegis` organisation on github.com, then:
+One-time setup:
 
-```bash
-git remote add origin git@github.com:advaegis/advaegis-site.git
-git push -u origin main
-```
-
-Protect `main` so only reviewed code reaches production. In the GitHub repo, go to
-**Settings → Rules → Rulesets → New branch ruleset**, target `main`, and turn on
-"Require a pull request before merging" and "Block force pushes".
-
-## 3. Connect Cloudflare (automatic deploys from `main`)
-
-1. In the Cloudflare dashboard, go to **Workers & Pages → Create → Import a repository**.
-2. Connect GitHub and install the Cloudflare app on the `advaegis` organisation.
-   Give it access to **only** the `advaegis-site` repository.
-3. Select `advaegis-site` and use these settings:
-   - Project name: `advaegis-site` (must match `name` in `wrangler.jsonc`)
-   - Build command: `npm run build`
-   - Deploy command: `npx wrangler deploy`
-   - Production branch: `main`
-   - Builds for non-production branches: on. Each pull request then gets its own preview
-     URL, uploaded with `npx wrangler versions upload`.
-4. Save and deploy. The first deploy attaches **www.advaegis.com** as a custom domain
-   (from `routes` in `wrangler.jsonc`) and Cloudflare issues the certificate.
+1. In Cloudflare, go to **My Profile → API Tokens → Create Token**, and use the "Edit Cloudflare Workers"
+   template. Scope it to the Advaegis account and the `advaegis.com` zone only.
+2. Add it and the account ID as repository secrets:
+   ```bash
+   gh secret set CLOUDFLARE_API_TOKEN      # paste the token when prompted
+   gh secret set CLOUDFLARE_ACCOUNT_ID     # Workers & Pages → Account details
+   ```
+3. Merge a pull request. The first deploy creates the `advaegis-site` Worker and attaches
+   **www.advaegis.com** (from `routes` in `wrangler.jsonc`). Cloudflare issues the certificate.
+   Preview uploads start working after this first deploy.
 
 ## 4. Redirect advaegis.com to www.advaegis.com
 
@@ -110,12 +100,15 @@ Claude Code reads `CLAUDE.md` automatically. To get the same design guidance use
 the site, install Anthropic's frontend-design plugin: type `/plugin` in Claude Code, find
 **frontend-design** and install it.
 
-The workflow (also in `CLAUDE.md`):
+The workflow (detail in `CLAUDE.md`):
 
-1. `git switch -c feat/short-description`
-2. Ask Claude Code for the change; check it with `npm run dev` / `npm run preview`.
-3. `git push -u origin HEAD`, then open a pull request (`gh pr create`).
-4. Review the pull request and its Cloudflare preview URL, then merge. Cloudflare deploys `main`.
+1. Ask Claude Code for the change. It branches, makes the change, runs `npm run verify`
+   and opens a pull request. It asks before installing anything.
+2. Review the pull request and the preview URL in the CI run's summary.
+3. Merge. GitHub Actions deploys `main` to production.
+
+Dependabot opens weekly grouped update PRs. Ask Claude Code to review one
+(for example, "review the Dependabot PR"), then merge it.
 
 ## Common changes
 
