@@ -1,24 +1,31 @@
 # One pipeline for the whole site.
 #   Pull request: type-check, build, test, dry-run the deploy, upload a preview version.
 #   Push to main (a merged PR): the same checks, then deploy to production.
-# The job name "verify" is the required status check on main.
+#   Weekly and on demand: the security job alone, so new advisories and
+#   end-of-life dates surface without a code change.
+# "verify" and "security" are the required status checks on main. Production
+# deploys depend on verify only, so a fresh advisory cannot block an urgent fix.
 name: CI
 
 on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   # Superseded PR runs are cancelled; production deploys queue, never cancel mid-deploy.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -50,3 +57,16 @@ jobs:
       - name: Deploy to production
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npx wrangler deploy
+
+  # npm audit (high+), registry signatures, and end-of-life/deprecation checks.
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run security
