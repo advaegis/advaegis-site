@@ -13,6 +13,8 @@ and it must stay publicly available: Apple Developer Program verification depend
 - `npm run typecheck`: `astro check` (types in `.astro` and `.ts` files)
 - `npm test`: checks the built `dist/` (run after a build)
 - `npm run verify`: typecheck, build and test. This is exactly what CI runs.
+- `npm run security`: `npm audit` (fails on high/critical), registry signature check, and
+  `scripts/support-check.mjs` (Node end-of-life, deprecated or out-of-support dependencies)
 
 **Never deploy.** Production deploys only from GitHub Actions (`.github/workflows/ci.yml`)
 when a reviewed pull request is merged to `main`. `.claude/settings.json` blocks
@@ -30,6 +32,7 @@ when a reviewed pull request is merged to `main`. `.claude/settings.json` blocks
 | Security and cache headers | `public/_headers` |
 | Cloudflare Worker config and domains | `wrangler.jsonc` |
 | Site tests (built-output checks) | `tests/site.test.mjs` |
+| Support and end-of-life rules | `scripts/support-check.mjs` |
 | CI and production deploy | `.github/workflows/ci.yml` |
 | Dependency update PRs | `.github/dependabot.yml` |
 | What Claude Code may run | `.claude/settings.json` |
@@ -79,9 +82,34 @@ For new UI, use the frontend-design skill and keep within this system.
 
 `tests/site.test.mjs` uses Node's built-in test runner (no test framework) against `dist/`.
 It enforces the rules above: legal footer on every page, no inline scripts or styles,
-no third-party requests, internal links resolve, images have alt text, and the sitemap
-matches the built pages. When a change adds a rule worth enforcing, add a check there
+no third-party requests, internal links resolve, images have alt text, the sitemap
+matches the built pages, and the CSP in `_headers` stays strict. When a change adds a rule worth enforcing, add a check there
 rather than a new tool. Prove that a new check fails when the rule is broken.
+
+## Security
+
+Every PR must leave `npm run security` passing. CI enforces it on PRs and runs it weekly.
+
+- **Before opening a PR**, run `npm run security` and `/security-review`. Fix what they find,
+  or explain in the PR why something can't be fixed yet.
+- **Dependencies.** Never run `npm audit fix --force`: it makes unreviewed major upgrades.
+  Upgrade deliberately: read the upgrade guide, make the code changes, and compare the
+  built pages before and after (text and HTML), not just whether the build passes.
+  Stay on a supported major version (Astro gives security fixes to one previous major only).
+  When a check warns that a dependency is one major behind, open an upgrade PR rather than
+  waiting for it to fail.
+- **Install scripts are denied** (`allowScripts` in `package.json`). Approving one is an
+  install decision: ask first, and say what the script does and why the prebuilt binary
+  isn't enough.
+- **Lockfile.** `package-lock.json` changes only through `npm install` of an approved
+  change. Explain unexpected lockfile churn in the PR.
+- **Headers and CSP** (`public/_headers`). Never add `'unsafe-inline'`, `'unsafe-eval'` or
+  wildcards. A test enforces this; do not weaken the test.
+- **Workflows** (`.github/`). Pin actions to a full commit SHA with the version in a comment,
+  give workflows only the permissions they need (`contents: read` by default), never use
+  `pull_request_target`, and never print secrets or pass them to untrusted steps.
+- **Secrets** live only in GitHub Actions secrets and Cloudflare. Never read, write, echo or
+  commit them. GitHub secret scanning and push protection are on as a backstop.
 
 ## Workflow
 
@@ -89,7 +117,7 @@ The owner reviews and merges every change; Claude Code does everything up to the
 
 1. Branch from an up-to-date `main` (`feat/...`, `fix/...`, `chore/...`).
 2. Make the change. For UI, check the pages with `npm run dev` or `npm run preview`.
-3. Done means `npm run verify` passes locally, with no new warnings.
+3. Done means `npm run verify` and `npm run security` pass locally, with no new warnings.
 4. Commit in small, logical commits, push the branch and open a PR with `gh pr create`. Say
    what changed, why, and how it was checked. Note anything the owner must do (secrets,
    dashboard settings, installs).
