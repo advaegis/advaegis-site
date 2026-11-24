@@ -123,6 +123,9 @@ The owner reviews and merges every change; Claude Code does everything up to the
    dashboard settings, installs).
 5. Watch CI (`gh pr checks`), and fix failures on the branch. The job summary links the preview.
 6. Never merge. After the owner merges, CI deploys `main` to production.
+7. After the merge, clean up locally. GitHub deletes the remote branch on merge.
+   Run `git switch main && git pull --prune && git branch -d <branch>`.
+   Use `-d`, never `-D`: if git refuses, the branch has unmerged work, so stop and ask.
 
 Dependabot opens grouped weekly PRs for npm packages and GitHub Actions. For those, read the
 changelogs for breaking changes, run `npm run verify`, push fixes to the Dependabot branch
