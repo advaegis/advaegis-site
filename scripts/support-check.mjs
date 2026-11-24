@@ -1,9 +1,12 @@
 // Fails when the toolchain is out of support; warns ahead of time. No dependencies.
+//   Registry signatures (npm audit signatures): fail on a bad signature; a registry
+//   outage only warns, after one retry (the lockfile's integrity hashes still apply).
 //   Node (.nvmrc): fail if past end-of-life or within 90 days of it.
 //   Direct dependencies: fail if deprecated, or 2+ major versions behind latest;
 //   warn if 1 major behind (on 0.x, any newer minor line).
 // Part of `npm run security`; run weekly in CI so drift is caught without a code change.
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 const root = new URL('../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
@@ -17,6 +20,23 @@ async function getJson(url, headers = {}) {
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   return res.json();
+}
+
+// Registry signatures
+const outage = /FETCH_ERROR|invalid json response|E(TIMEDOUT|CONNRESET|AI_AGAIN|CONNREFUSED)|E5\d\d\b/;
+for (let attempt = 1; ; attempt++) {
+  const r = spawnSync('npm', ['audit', 'signatures'], { cwd: root, encoding: 'utf8' });
+  const out = `${r.stdout}${r.stderr}`.trim();
+  if (r.status === 0) {
+    ok(out.match(/^\d+ packages have verified registry signatures/m)?.[0] ?? 'registry signatures verified');
+  } else if (!outage.test(out)) {
+    fail(`npm audit signatures:\n${out}`);
+  } else if (attempt < 2) {
+    continue;
+  } else {
+    warn(`npm audit signatures could not reach the registry; signatures not checked this run: ${out.split('\n').find((l) => outage.test(l))}`);
+  }
+  break;
 }
 
 // Node runtime
