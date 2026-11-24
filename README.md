@@ -131,3 +131,8 @@ Dependabot opens weekly grouped update PRs. Ask Claude Code to review one
 - [ ] Every page shows the legal footer, and it matches Companies House.
 - [ ] `https://www.advaegis.com` loads in a private browser window (Apple checks that the site
       is publicly available).
+
+## Licence
+
+Copyright ADVAEGIS LTD. All rights reserved. The code and content are not open source: see
+[LICENSE](LICENSE).
