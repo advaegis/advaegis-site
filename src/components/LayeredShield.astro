@@ -1,0 +1,97 @@
+---
+/**
+ * The home-page signature: one shield layer per practice area,
+ * drawn from the core outwards, each labelled on its top edge.
+ * Data comes from src/data/services.ts — add a service, get a layer.
+ */
+import { services } from '../data/services';
+import { SHIELD_BOTTOM, SHIELD_TOP, shieldPath, shieldTopY } from '../lib/shield';
+
+const CORE = 64; // half-width of the innermost layer
+const STEP = 38; // spacing between layers
+const layers = services.map((s, i) => ({ label: s.short, w: CORE + i * STEP }));
+const outer = layers[layers.length - 1].w;
+
+const pad = 18;
+const viewBox = [
+  -(outer + pad),
+  shieldTopY(outer) - pad,
+  2 * (outer + pad),
+  outer * (SHIELD_BOTTOM - SHIELD_TOP) + 2 * pad,
+].join(' ');
+
+const description = `Layers of practice, from the core outwards: ${services
+  .map((s) => s.title)
+  .join(', ')}.`;
+---
+
+<figure class="shield">
+  <svg viewBox={viewBox} role="img" aria-label={description}>
+    <path class="shield__core" d={shieldPath(CORE * 0.55)} />
+    <g class="shield__layers" fill="none">
+      {layers.map(({ w }) => <path d={shieldPath(w)} pathLength="1" />)}
+    </g>
+    <g class="shield__labels" text-anchor="middle" dominant-baseline="central">
+      {layers.map(({ w, label }) => (
+        <text x="0" y={shieldTopY(w)}>{label}</text>
+      ))}
+    </g>
+    <circle class="shield__dot" cx="0" cy={Math.round(outer * SHIELD_BOTTOM)} r="5" />
+  </svg>
+</figure>
+
+<style>
+  .shield {
+    margin: 0;
+    color: var(--ink);
+  }
+  .shield__core {
+    fill: var(--ink);
+  }
+  .shield__layers path {
+    stroke: var(--verdigris);
+    stroke-width: 1.5;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    animation: draw 900ms cubic-bezier(0.3, 0.7, 0.2, 1) both;
+  }
+  .shield__layers path:nth-child(1) { animation-delay: 0ms; }
+  .shield__layers path:nth-child(2) { animation-delay: 110ms; }
+  .shield__layers path:nth-child(3) { animation-delay: 220ms; }
+  .shield__layers path:nth-child(4) { animation-delay: 330ms; }
+  .shield__layers path:nth-child(5) { animation-delay: 440ms; }
+  .shield__layers path:nth-child(6) { animation-delay: 550ms; }
+  .shield__layers path:nth-child(7) { animation-delay: 660ms; }
+  .shield__layers path:nth-child(8) { animation-delay: 770ms; }
+
+  .shield__labels text {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    fill: var(--ink);
+    /* knock the shield line out behind each label */
+    stroke: var(--paper);
+    stroke-width: 8px;
+    stroke-linejoin: round;
+    paint-order: stroke;
+    animation: appear 500ms 900ms both;
+  }
+  .shield__dot {
+    fill: var(--bronze);
+    animation: appear 400ms 1300ms both;
+  }
+
+  @keyframes draw {
+    from { stroke-dashoffset: 1; }
+  }
+  @keyframes appear {
+    from { opacity: 0; }
+  }
+
+  @media (max-width: 40rem) {
+    .shield__labels {
+      display: none;
+    }
+  }
+</style>

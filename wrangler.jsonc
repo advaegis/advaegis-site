@@ -1,0 +1,17 @@
+// Cloudflare Worker that serves the built site as static assets only.
+// No Worker script: every request is a free static-asset request.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "advaegis-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  // www is the canonical host. The apex (advaegis.com) is redirected to www
+  // with a Cloudflare Redirect Rule — see README, "Cloudflare setup".
+  "routes": [{ "pattern": "www.advaegis.com", "custom_domain": true }],
+  "workers_dev": true,
+  "preview_urls": true
+}

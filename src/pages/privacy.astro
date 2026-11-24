@@ -1,0 +1,57 @@
+---
+/**
+ * Privacy notice for the company website only.
+ * Each product (e.g. MyTodoHelp) needs its own notice for its app data.
+ * Review this text before publishing — it is a starting point, not legal advice.
+ */
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config';
+const { company } = site;
+const updated = '24 November 2026';
+---
+
+<Base title="Privacy" description="How Advaegis handles personal data on this website.">
+  <article class="wrap page-intro privacy">
+    <h1>Privacy notice</h1>
+    <p class="muted">Last updated {updated}</p>
+
+    <h2>Who we are</h2>
+    <p>
+      This website is run by {company.legalName}, company number {company.number}, registered
+      office {company.registeredOffice}. We are the controller of personal data described in this
+      notice. Contact us at <a href={`mailto:${site.email}`}>{site.email}</a>.
+    </p>
+
+    <h2>What this website collects</h2>
+    <p>
+      This website has no forms, no accounts, no analytics and sets no cookies. It is hosted on
+      Cloudflare, which processes technical data such as IP addresses to deliver the site and
+      protect it from attacks.
+    </p>
+
+    <h2>If you email us</h2>
+    <p>
+      We use your name, email address and anything you send us to reply and, where it leads to
+      work together, to manage that relationship. Our email is provided by Google Workspace. We
+      keep correspondence only as long as we need it for these purposes or to meet legal
+      obligations.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+      You can ask to see, correct or delete personal data we hold about you, or object to how we
+      use it, by emailing us. If you are unhappy with how we handle your data, you can complain to
+      the Information Commissioner's Office at <a href="https://ico.org.uk">ico.org.uk</a>.
+    </p>
+
+    <h2>Our apps</h2>
+    <p>Each of our apps has its own privacy notice covering the data that app uses.</p>
+  </article>
+</Base>
+
+<style>
+  .privacy h2 {
+    font-size: var(--step-2);
+    margin-top: 2.5rem;
+  }
+</style>

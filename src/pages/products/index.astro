@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProductFeature from '../../components/ProductFeature.astro';
+import { getProducts } from '../../lib/products';
+
+const products = await getProducts();
+---
+
+<Base title="Products" description="Apps from Advaegis that help people and small businesses with everyday life.">
+  <section class="wrap page-intro">
+    <h1>Products</h1>
+    <p class="lede">
+      Apps that help people and small businesses stay on top of everyday life. More are on
+      the way.
+    </p>
+  </section>
+
+  {products.map((product) => (
+    <section class="section">
+      <div class="wrap">
+        <ProductFeature product={product} headingLevel="h2" />
+      </div>
+    </section>
+  ))}
+</Base>

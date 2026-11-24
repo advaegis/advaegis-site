@@ -1,0 +1,23 @@
+{
+  "name": "advaegis-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro build && wrangler dev",
+    "deploy:check": "astro build && wrangler deploy --dry-run",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.0.0",
+    "astro": "^5.15.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,45 @@
+---
+import Base from '../layouts/Base.astro';
+import ServiceList from '../components/ServiceList.astro';
+import ContactBlock from '../components/ContactBlock.astro';
+import { site } from '../site.config';
+---
+
+<Base
+  title="Consulting"
+  description="Enterprise architecture, infrastructure and platform engineering, observability, SRE and GenAI enablement consulting from Advaegis."
+>
+  <section class="wrap page-intro">
+    <h1>Consulting</h1>
+    <p class="lede">
+      Advaegis works with engineering and technology teams on the foundations their services
+      run on, and on getting real value from GenAI tools.
+    </p>
+  </section>
+
+  <section class="section" aria-labelledby="areas-title">
+    <div class="wrap">
+      <h2 id="areas-title">Areas of practice</h2>
+      <ServiceList />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="who-title">
+    <div class="wrap">
+      <h2 id="who-title">Who you work with</h2>
+      <p>
+        Consulting is delivered by {site.founder.name}, founder of Advaegis, who works directly
+        with your team rather than handing work on.
+      </p>
+      <p>
+        For experience, past roles and current credentials, see
+        <a href={site.founder.linkedin} rel="noopener">{site.founder.name} on LinkedIn</a>.
+      </p>
+    </div>
+  </section>
+
+  <ContactBlock
+    title="Start a conversation"
+    text="Tell us what you are working on and where you would like help."
+  />
+</Base>

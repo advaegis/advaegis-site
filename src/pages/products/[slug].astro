@@ -1,0 +1,95 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { availability, getProducts, type Product } from '../../lib/products';
+
+export async function getStaticPaths() {
+  const products = await getProducts();
+  return products.map((product) => ({ params: { slug: product.id }, props: { product } }));
+}
+
+const { product } = Astro.props as { product: Product };
+const { name, summary, icon, screenshots, website, stores } = product.data;
+const { Content } = await render(product);
+---
+
+<Base title={name} description={summary}>
+  <section class="wrap page-intro product-head">
+    <img src={icon} alt="" width="88" height="88" class="product-head__icon" />
+    <div>
+      <h1>{name}</h1>
+      <p class="product-head__status">{availability(product)}</p>
+      <p class="lede">{summary}</p>
+      {(stores.length > 0 || website) && (
+        <p class="product-head__links">
+          {stores.map((s) => <a class="button button--solid" href={s.href}>{s.label}</a>)}
+          {website && <a class="button" href={website}>Visit {new URL(website).hostname}</a>}
+        </p>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap prose">
+      <Content />
+    </div>
+  </section>
+
+  {screenshots.length > 0 && (
+    <section class="section" aria-label={`${name} screens`}>
+      <ul class="wrap shots">
+        {screenshots.map((s) => (
+          <li>
+            <img src={s.src} alt={s.alt} width="390" height="844" loading="lazy" />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>
+
+<style>
+  .product-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(1.25rem, 4vw, 2.5rem);
+    align-items: start;
+  }
+  .product-head__icon {
+    border-radius: 20px;
+    margin-top: 0.5rem;
+  }
+  .product-head__status {
+    color: var(--verdigris-deep);
+    font-weight: 600;
+  }
+  .product-head__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .prose :global(p) {
+    font-size: var(--step-1);
+  }
+  .shots {
+    list-style: none;
+    padding-inline: 0;
+    margin-block: 0;
+    max-width: var(--page);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: clamp(1.5rem, 4vw, 3rem);
+    justify-items: center;
+  }
+  .shots img {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 28px;
+    border: 1px solid var(--mist);
+  }
+  @media (max-width: 36rem) {
+    .product-head {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

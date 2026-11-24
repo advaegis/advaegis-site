@@ -1,0 +1,174 @@
+/* ------------------------------------------------------------------
+   Advaegis design tokens
+   Palette: oxidised bronze — the aegis as an old shield, weathered
+   to verdigris. Ink and paper carry the page; verdigris marks
+   structure and links; bronze appears once per view at most.
+   Type scale: the classic 12/14/16/18/21/24/36/48/60/72 sequence.
+   ------------------------------------------------------------------ */
+:root {
+  --ink: #172a33;
+  --paper: #eef2f0;
+  --verdigris: #2e8478;
+  --verdigris-deep: #22685f; /* text-safe on paper (AA) */
+  --bronze: #a8742f;
+  --mist: #c5d3cf;
+  --slate: #4a5e66;
+
+  --font-display: 'Bricolage Grotesque Variable', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --step--1: 0.875rem; /* 14 */
+  --step-0: 1.125rem; /* 18 */
+  --step-1: 1.3125rem; /* 21 */
+  --step-2: 1.5rem; /* 24 */
+  --step-3: clamp(1.75rem, 1.2rem + 2vw, 2.25rem); /* 28→36 */
+  --step-4: clamp(2.25rem, 1.3rem + 4vw, 3.75rem); /* 36→60 */
+  --step-5: clamp(2.5rem, 1.2rem + 5.5vw, 4.5rem); /* 40→72 */
+
+  --measure: 62ch;
+  --page: 72rem;
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --space-section: clamp(4rem, 10vw, 8rem);
+  --radius: 6px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 650;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+h1 { font-size: var(--step-5); font-weight: 700; letter-spacing: -0.035em; }
+h2 { font-size: var(--step-4); }
+h3 { font-size: var(--step-2); letter-spacing: -0.01em; line-height: 1.2; }
+
+p,
+ul,
+ol,
+dl {
+  margin: 0 0 1em;
+  max-width: var(--measure);
+}
+
+a {
+  color: var(--verdigris-deep);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--bronze);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Layout primitives ------------------------------------------------ */
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--page));
+  margin-inline: auto;
+}
+
+.section {
+  padding-block: var(--space-section);
+  border-top: 1px solid var(--mist);
+}
+
+.page-intro {
+  padding-block: clamp(3rem, 8vw, 6rem) var(--space-section);
+}
+
+.lede {
+  font-size: var(--step-1);
+  color: var(--slate);
+}
+
+.muted {
+  color: var(--slate);
+}
+
+/* Buttons: one solid, one quiet. Labels say what happens. */
+.button {
+  display: inline-block;
+  padding: 0.7em 1.2em;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--ink);
+  font-weight: 600;
+  font-size: var(--step-0);
+  line-height: 1.2;
+  text-decoration: none;
+  color: var(--ink);
+}
+.button--solid {
+  background: var(--ink);
+  color: var(--paper);
+}
+.button:hover {
+  text-decoration: underline;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+}
+.skip-link:focus {
+  left: var(--gutter);
+  top: 0.75rem;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.5em 1em;
+  z-index: 10;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
