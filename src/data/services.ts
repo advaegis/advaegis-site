@@ -42,9 +42,9 @@ export const services: Service[] = [
       'Service levels, incident practice and capacity planning that keep systems dependable as they grow.',
   },
   {
-    short: 'GenAI enablement',
-    title: 'GenAI enablement',
+    short: 'Agentic AI enablement',
+    title: 'Agentic AI enablement',
     summary:
-      'Rolling out tools such as Claude Code and taking GenAI projects from first use case to a working, governed pilot.',
+      'Rolling out tools such as Claude Code and taking agentic AI projects from first use case to a working, governed pilot.',
   },
 ];

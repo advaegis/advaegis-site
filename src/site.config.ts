@@ -6,7 +6,7 @@ export const site = {
   name: 'Advaegis',
   url: 'https://www.advaegis.com',
   description:
-    'Advaegis builds technology that helps people and small businesses stay on top of everyday life, and helps engineering teams keep their platforms dependable and put GenAI to work.',
+    'Advaegis builds technology that helps people and small businesses stay on top of everyday life, and helps engineering teams keep their platforms dependable and put agentic AI to work.',
   // Shown in the footer: what the name means.
   nameNote: 'Advaegis is short for advanced aegis, the protective shield of Greek myth.',
   email: 'hello@advaegis.com', // Google Workspace alias of admin@
