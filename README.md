@@ -33,6 +33,7 @@ gh repo clone advaegis/advaegis-site ~/Projects/advaegis-site
 cd ~/Projects/advaegis-site
 npm ci
 npm run verify           # typecheck, build and test, as CI does
+npm run security         # audit, signatures, end-of-life and support checks
 npm run dev              # http://localhost:4321
 npm run preview          # serves dist/ with Wrangler as Cloudflare will, at http://localhost:8787
 ```
@@ -43,14 +44,15 @@ The repository is public, so GitHub's rulesets are free. In **Settings → Rules
 New branch ruleset**, target `main` and turn on:
 
 - Require a pull request before merging
-- Require status checks to pass: `verify`
+- Require status checks to pass: `verify` and `security`
 - Block force pushes, and restrict deletions
 
 ## 3. Deploys: GitHub Actions to Cloudflare
 
 `.github/workflows/ci.yml` runs on every pull request: typecheck, build, test, a deploy dry
 run, and a preview version (its URL is in the run's summary). On a merge to `main` it runs
-the same checks and then `wrangler deploy`. Cloudflare Workers Builds is **not** used.
+the same checks and then `wrangler deploy`. A `security` job runs on every PR and every
+Monday, so new advisories and end-of-life dates show up even when nothing changes. Cloudflare Workers Builds is **not** used.
 Leave it disconnected, or every merge deploys twice.
 
 One-time setup:

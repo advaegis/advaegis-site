@@ -90,3 +90,13 @@ test('sitemap lists exactly the built pages', () => {
     assert.ok(paths.has(path), `sitemap: ${path} is missing (add it to pages in sitemap.xml.ts)`);
   }
 });
+
+test('security headers keep a strict CSP on every path', () => {
+  const headers = readFileSync(join(dist, '_headers'), 'utf8');
+  const csp = headers.match(/^\/\*\n(?:\s+.*\n)*?\s+Content-Security-Policy: (.+)$/m)?.[1];
+  assert.ok(csp, '_headers: no Content-Security-Policy for /*');
+  assert.ok(!/unsafe-(inline|eval)|\*(?!\.)/.test(csp), `_headers: CSP is loosened: ${csp}`);
+  for (const directive of ["default-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'none'"]) {
+    assert.ok(csp.includes(directive), `_headers: CSP is missing ${directive}`);
+  }
+});
