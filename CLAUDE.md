@@ -10,9 +10,13 @@ and it must stay publicly available: Apple Developer Program verification depend
 - `npm run build`: static build into `dist/`
 - `npm run preview`: build, then serve `dist/` with Wrangler exactly as Cloudflare will
 - `npm run deploy:check`: build and dry-run a Cloudflare deploy (uploads nothing)
+- `npm run typecheck`: `astro check` (types in `.astro` and `.ts` files)
+- `npm test`: checks the built `dist/` (run after a build)
+- `npm run verify`: typecheck, build and test. This is exactly what CI runs.
 
-**Never run `wrangler deploy` against production.** Production deploys happen only when
-reviewed code is merged to `main` on GitHub (Cloudflare Workers Builds).
+**Never deploy.** Production deploys only from GitHub Actions (`.github/workflows/ci.yml`)
+when a reviewed pull request is merged to `main`. `.claude/settings.json` blocks
+`wrangler deploy`, pushing to `main` and `gh pr merge`; do not work around it.
 
 ## Where things live
 
@@ -25,6 +29,10 @@ reviewed code is merged to `main` on GitHub (Cloudflare Workers Builds).
 | Shield geometry (logo, favicon, hero) | `src/lib/shield.ts` |
 | Security and cache headers | `public/_headers` |
 | Cloudflare Worker config and domains | `wrangler.jsonc` |
+| Site tests (built-output checks) | `tests/site.test.mjs` |
+| CI and production deploy | `.github/workflows/ci.yml` |
+| Dependency update PRs | `.github/dependabot.yml` |
+| What Claude Code may run | `.claude/settings.json` |
 
 A new product needs only a Markdown file and its images under `public/images/products/<slug>/`.
 The home page, `/products/`, `/products/<slug>/` and the sitemap pick it up automatically.
@@ -34,8 +42,12 @@ belongs in the menu, to `nav` in `src/site.config.ts`.
 ## Rules
 
 - Reuse existing components and tokens before writing new ones. No new dependencies
-  without a clear reason; the site currently needs only `astro`, one font package and
-  `wrangler`.
+  without a clear reason; the site needs only `astro` and one font package, plus
+  `wrangler`, `@astrojs/check` and `typescript` for development.
+- **Ask before installing anything**, whether npm packages or system tools. Name the
+  package, why it is needed and what it replaces. System tools (node, gh, etc.) are
+  installed and updated by the owner with Homebrew; never use another installer.
+  Node's version is pinned in `.nvmrc`, which CI follows.
 - No inline `<script>` or `style=""` attributes: the CSP in `public/_headers` blocks them.
   Put styles in the component's `<style>` block, using the CSS custom properties.
 - No third-party requests (CDN fonts, analytics, embeds) without updating the CSP and the
@@ -63,9 +75,27 @@ belongs in the menu, to `nav` in `src/site.config.ts`.
 
 For new UI, use the frontend-design skill and keep within this system.
 
+## Tests
+
+`tests/site.test.mjs` uses Node's built-in test runner (no test framework) against `dist/`.
+It enforces the rules above: legal footer on every page, no inline scripts or styles,
+no third-party requests, internal links resolve, images have alt text, and the sitemap
+matches the built pages. When a change adds a rule worth enforcing, add a check there
+rather than a new tool. Prove that a new check fails when the rule is broken.
+
 ## Workflow
 
-1. Branch from `main` (`feat/...`, `fix/...`).
-2. Make the change; run `npm run build` and `npm run preview` and check the pages.
-3. Push and open a pull request. Cloudflare builds a preview URL for the branch.
-4. After review, merge to `main`. Cloudflare deploys to production.
+The owner reviews and merges every change; Claude Code does everything up to the PR.
+
+1. Branch from an up-to-date `main` (`feat/...`, `fix/...`, `chore/...`).
+2. Make the change. For UI, check the pages with `npm run dev` or `npm run preview`.
+3. Done means `npm run verify` passes locally, with no new warnings.
+4. Commit in small, logical commits, push the branch and open a PR with `gh pr create`. Say
+   what changed, why, and how it was checked. Note anything the owner must do (secrets,
+   dashboard settings, installs).
+5. Watch CI (`gh pr checks`), and fix failures on the branch. The job summary links the preview.
+6. Never merge. After the owner merges, CI deploys `main` to production.
+
+Dependabot opens grouped weekly PRs for npm packages and GitHub Actions. For those, read the
+changelogs for breaking changes, run `npm run verify`, push fixes to the Dependabot branch
+if needed, and summarise the risk on the PR.
