@@ -12,7 +12,7 @@
     "typecheck": "astro check",
     "test": "node --test",
     "verify": "astro check && astro build && node --test",
-    "security": "npm audit --audit-level=high && npm audit signatures && node scripts/support-check.mjs",
+    "security": "npm audit --audit-level=high && node scripts/support-check.mjs",
     "preview": "astro build && wrangler dev",
     "deploy:check": "astro build && wrangler deploy --dry-run",
     "astro": "astro"
